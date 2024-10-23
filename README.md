@@ -1,4 +1,4 @@
-# Key/Value Store api
+# Redis Store api
 
 ## Project Structure
 
