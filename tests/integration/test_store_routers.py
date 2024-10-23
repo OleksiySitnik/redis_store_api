@@ -1,7 +1,7 @@
 import httpx
 import pytest
 
-BASE_URL = "http://127.0.0.1:8000/api/v1/store"
+from tests.integration.test_config import BASE_URL
 
 TEST_KEY = "test_key"
 TEST_VALUE = "test_value"

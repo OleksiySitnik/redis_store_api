@@ -12,49 +12,30 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      redis-api:
-        image: redis-api:latest
-        ports:
-          - 8000:8000
-        options: >-
-          --health-cmd="curl -f http://localhost:8000 || exit 1"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Install dependencies
+      - name: Install Docker Compose
         run: |
-          pip install pipenv
-          pipenv install --deploy --system
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
 
-      # Run unit tests
+      - name: Build and start services with Docker Compose
+        run: |
+          docker-compose up --build -d redis-api
+
+      - name: Wait for the app to be ready
+        run: |
+          until curl -f http://localhost:8000/healthcheck; do echo waiting for API; sleep 5; done
+
       - name: Run unit tests
         run: |
-          pytest -v tests/unit
+          docker-compose up unit-tests
 
-      - name: Set up Docker Compose
-        run: |
-          docker-compose up --build -d
-
-      # Wait for the FastAPI app to be healthy
-      - name: Wait for the FastAPI service to be ready
-        run: |
-          docker-compose exec redis-api bash -c "until curl -f http://localhost:8000/healthcheck; do sleep 5; done"
-
-      # Run integration tests
       - name: Run integration tests
         run: |
-          pytest -v tests/integration
+          docker-compose up integration-tests
 
       - name: Tear down Docker Compose
         run: |

@@ -8,4 +8,24 @@ services:
       - "8000:8000"
     volumes:
       - .:/usr/src/app
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    command: [ "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000" ]
+  unit-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - .:/app
+    depends_on:
+      - redis-api
+    command: [ "pytest", "-v", "tests/unit" ]
+  integration-tests:
+    environment:
+      - BASE_URL=http://redis-api:8000/api/v1/store
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - .:/app
+    depends_on:
+      - redis-api
+    command: [ "pytest", "-v", "tests/integration" ]

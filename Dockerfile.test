@@ -1,0 +1,13 @@
+FROM python:3.10-slim
+
+WORKDIR /usr/src/app
+
+COPY Pipfile Pipfile.lock ./
+RUN pip install pipenv && pipenv install --system --deploy
+
+RUN pip install pytest pytest-asyncio httpx
+
+COPY ./app ./app
+COPY ./tests ./tests
+
+CMD ["pytest", "tests/"]
